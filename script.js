@@ -25,6 +25,20 @@ var VEL_THRESHOLD = 2;
 var MARGIN = 100;
 var COOLDOWN = 5;
 
+var START_TIME = 40;
+var END_TIME = 500;
+var RECORD = 0;
+
+if(RECORD)
+{
+  var capturer = new CCapture( {
+      framerate: 30,
+      verbose: false,
+      format: 'webm',
+      //workersPath: '../common/'
+  } );
+}
+
 function stringifyColor(rgb)
 {
   return 'rgb('+rgb.r+','+rgb.g+','+rgb.b+')';
@@ -68,6 +82,24 @@ setInterval(function(){
     var spk = new Spark(Math.random()*(WID-2*MARGIN)+MARGIN,HEI,(Math.random()-0.5)*LAUNCH_VEL_X,(Math.random()-0.5)*LAUNCH_VEL_YVAR-LAUNCH_VEL_Y, color, atime);
     world.addStuff(spk);
   }
+  
+  if(RECORD)
+  {
+    if(time === START_TIME)
+    {
+      capturer.start();
+    }
+    else if(time < END_TIME)
+    {
+      capturer.capture(canvas);
+    }
+    else if(time === END_TIME)
+    {
+      capturer.stop();
+      capturer.save();
+      RECORD = false;
+    }
+  }
 
   world.act();
   world.render(ctx);
@@ -88,7 +120,7 @@ function makeSparks(xx,yy,num,vely,hue)
   for(var i = 0; i < num; i++)
   {
     var angle = i/num*Math.PI*2+offset;
-    var color = {'h':clampRound(hue+Math.random()*0.07),'s':1.0,'v':1.0};
+    var color = {'h':clampRound(hue+Math.random()*0.07),'s': Math.random()*0.2+0.8,'v':Math.random()*0.5+0.5};
     world.addStuff(new Spark(xx,yy,Math.cos(angle)*SPARK_VEL, (Math.sin(angle))*SPARK_VEL+vely, color, -1));
   }
 }
@@ -137,7 +169,8 @@ function Spark(xx,yy,velx,vely,color,activeTime)
   this.render = function(cx) {
     if(activeTime !== -0.5)
     {
-      cx.fillStyle = stringifyColor(HSVtoRGB(color));
+      var c2 = {'h':color.h,'s':color.s,'v':color.v*(Math.random()*0.5+0.5)};
+      cx.fillStyle = stringifyColor(HSVtoRGB(c2));
       cx.fillRect(xx-size, yy-size, size*2,size);
     }
   };
