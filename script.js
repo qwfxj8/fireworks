@@ -14,20 +14,22 @@ var ctx = canvas.getContext('2d');
 var GRAVITY = 0.1;
 var FRICTION = 0.999;
 var SPARK_VEL = 2;
-var MIN_SPARKS = 5;
-var MAX_SPARKS = 30;
+var MIN_SPARKS = 3;
+var MAX_SPARKS = 40;
 var LAUNCH_VEL_Y = 12;
 var LAUNCH_VEL_YVAR = 3;
 var LAUNCH_VEL_X = 0.5;
-var ACTIVE_TIME_VAR = 19;
+var ACTIVE_TIME_VAR = 24;
 var MIN_ACTIVE_TIME = 1;
 var VEL_THRESHOLD = 2;
 var MARGIN = 100;
 var COOLDOWN = 5;
+var FADE_RATE = 0.97;
+var LAUNCH_INTERVAL = 30;
 
 var START_TIME = 40;
-var END_TIME = 500;
-var RECORD = 0;
+var END_TIME = 2000;
+var RECORD = 1;
 
 if(RECORD)
 {
@@ -75,7 +77,7 @@ var time = 0;
 
 setInterval(function(){
   time++;
-  if(time % 40 == 0){
+  if(time % LAUNCH_INTERVAL == 0){
     
     var color = {'h':Math.random()*1.0,'s':1.0,'v':1.0};
     var atime = Math.floor(Math.random()*ACTIVE_TIME_VAR+MIN_ACTIVE_TIME);
@@ -114,25 +116,33 @@ function clampRound(x)
   return x;
 }
 
-function makeSparks(xx,yy,num,vely,hue)
-{
-  var offset =Math.random()*Math.PI*2;
-  for(var i = 0; i < num; i++)
-  {
-    var angle = i/num*Math.PI*2+offset;
-    var color = {'h':clampRound(hue+Math.random()*0.07),'s': Math.random()*0.2+0.8,'v':Math.random()*0.5+0.5};
-    world.addStuff(new Spark(xx,yy,Math.cos(angle)*SPARK_VEL, (Math.sin(angle))*SPARK_VEL+vely, color, -1));
-  }
-}
+
 
 function randomIntRange(min,max)
 {
   return Math.floor(Math.random()*(max-min+1))+min;
 }
+function randomIntExpRange(min,max)
+{
+  var rnd = Math.random();
+  return Math.floor(min * Math.pow((max+1)/min, rnd));
+}
 
 function Spark(xx,yy,velx,vely,color,activeTime)
 {
-  var sparkCount = randomIntRange(MIN_SPARKS,MAX_SPARKS);
+  var fading = 1.0;
+  function makeSparks(xx,yy,num,vely,hue)
+  {
+    var offset = Math.random()*Math.PI*2;
+    for(var i = 0; i < num; i++)
+    {
+      var angle = i/num*Math.PI*2+offset;
+      var color = {'h':clampRound(hue+Math.random()*0.07),'s': Math.random()*0.2+0.8,'v':Math.random()*0.5+0.5};
+      world.addStuff(new Spark(xx,yy,Math.cos(angle)*SPARK_VEL, (Math.sin(angle))*SPARK_VEL+vely, color, -1));
+    }
+  }
+
+  var sparkCount = randomIntExpRange(MIN_SPARKS,MAX_SPARKS);
   var size = 1;
   this.act = function() {
     //if(activeTime < 0)
@@ -156,8 +166,12 @@ function Spark(xx,yy,velx,vely,color,activeTime)
       }
       if(activeTime === 0)
       {
-        activeTime = -0.5;
+        return false;
       }
+    }
+    if(activeTime < 0)
+    {
+      fading *= FADE_RATE;
     }
     //}
     //if(activeTime >= 0)
@@ -169,7 +183,7 @@ function Spark(xx,yy,velx,vely,color,activeTime)
   this.render = function(cx) {
     if(activeTime !== -0.5)
     {
-      var c2 = {'h':color.h,'s':color.s,'v':color.v*(Math.random()*0.5+0.5)};
+      var c2 = {'h':color.h,'s':color.s,'v':color.v*(Math.random()*0.3+0.7)*fading};
       cx.fillStyle = stringifyColor(HSVtoRGB(c2));
       cx.fillRect(xx-size, yy-size, size*2,size);
     }
