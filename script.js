@@ -29,7 +29,7 @@ var LAUNCH_INTERVAL = 30;
 
 var START_TIME = 40;
 var END_TIME = 2000;
-var RECORD = 1;
+var RECORD = 0;
 
 if(RECORD)
 {
@@ -131,14 +131,14 @@ function randomIntExpRange(min,max)
 function Spark(xx,yy,velx,vely,color,activeTime)
 {
   var fading = 1.0;
-  function makeSparks(xx,yy,num,vely,hue)
+  function makeSparks(xx,yy,num,vely,hue,mult)
   {
     var offset = Math.random()*Math.PI*2;
     for(var i = 0; i < num; i++)
     {
       var angle = i/num*Math.PI*2+offset;
       var color = {'h':clampRound(hue+Math.random()*0.07),'s': Math.random()*0.2+0.8,'v':Math.random()*0.5+0.5};
-      world.addStuff(new Spark(xx,yy,Math.cos(angle)*SPARK_VEL, (Math.sin(angle))*SPARK_VEL+vely, color, -1));
+      world.addStuff(new Spark(xx,yy,Math.cos(angle)*SPARK_VEL*mult, (Math.sin(angle))*SPARK_VEL*mult+vely, color, -1));
     }
   }
 
@@ -162,7 +162,7 @@ function Spark(xx,yy,velx,vely,color,activeTime)
       activeTime--;
       if(activeTime % COOLDOWN == 0)
       {
-        makeSparks(xx,yy,sparkCount,vely,color.h);
+        makeSparks(xx,yy,sparkCount,vely,color.h, 1.0);
       }
       if(activeTime === 0)
       {
